@@ -1,15 +1,27 @@
 # Water Quality Infrastructure Analysis
 
-This folder is a Bengaluru water-quality data pipeline. It downloads public datasets, then identifies water supply pipeline segments that are close enough to sewer lines or manholes to be flagged as possible contamination-risk locations.
+This folder is a Bengaluru water-quality data pipeline. It downloads public datasets, then calculates drain/sewage contamination hotspots using infrastructure overlap, field observations, sensitive receptors, and drain-edge typology.
 
 ## Core Workflow
 
 1. Download the source datasets listed in `urls.txt` into `data/`.
-2. Load BWSSB water supply KMLs, sewerage KMLs, and the manholes ZIP.
+2. Load BWSSB sewerage, manholes, water-supply assets, stormwater drains, drain typology, field audits, lakes, wetlands, and optional slum polygons.
 3. Reproject to UTM Zone 43N so distances are measured in meters.
-4. Buffer sewer lines and manholes by 2 meters.
-5. Spatially join water supply features with those buffers.
-6. Write the result to `contamination_risk_zones.geojson`.
+4. Score each drain segment using sewage proximity/overlap, nearby manholes, audit evidence, typology exposure, water-supply proximity, receptor proximity, and slum proximity when that layer exists.
+5. Convert scored drain candidates into hotspot points for the dashboard heatmap and popup layer.
+6. Write the result to `contamination_risk_zones.geojson` and `dashboard/public/contamination_risk_zones.geojson`.
+
+## Contamination Risk Scoring
+
+The current score is a 0-100 composite:
+
+- Sewage/drain overlap or proximity is the main hazard signal: within 5 m scores highest, with smaller scores out to 30 m.
+- Manholes near drains add supporting contamination risk out to 30 m.
+- Citizen audits add field evidence when reports include black/grey water, oily films, foam, unauthorised inlets, stagnant water, or smell.
+- Typology uses the `typ` field from `mod-foundation_typology_analysis.geojson`. Property-adjacent drains (`t4`, `t5`, `t8`) and lake-adjacent drains (`t6`, `t7`) score higher than roads, open space, agricultural land, or vacant land.
+- Existing lakes and wetlands add receptor pressure within 100 m.
+- Water-supply assets add public-health exposure pressure within 30 m.
+- Slum proximity is supported if a `slums.geojson` layer is added to one of the `Moddata` folders. No slum polygon layer is currently present in this checkout.
 
 ## Commands
 
@@ -63,7 +75,7 @@ npm run dev
 ## Notes
 
 - `download_data.py` can still process all URLs in `urls.txt`, but that downloads many large planning, hydrology, budget, and civic datasets under `data/`.
-- `analyze_infrastructure.py` includes a fallback XML KML parser because some OpenCity KMLs fail in GeoPandas/GDAL even though their coordinate data is usable.
+- `analyze_infrastructure.py` includes a fallback XML KML parser because some OpenCity KMLs fail in GeoPandas/GDAL even though their coordinate data is usable. If raw downloads are unavailable, it falls back to exported GeoJSONs in `dashboard/public/Moddata` and `dashboard/dist/Moddata`.
 - `export_groundwater_quality.py` converts `data/karnataka-ground-water-quality-reports/*.csv` into `dashboard/public/Moddata/groundwater_quality.geojson`.
 - `export_lake_water_quality.py` scans `data/bengaluru-lake-monthly-water-quality-reports/*.pdf`, selects the latest report month, extracts table rows, scores pollution levels, and joins matched rows to lake geometries in `dashboard/public/Moddata/lake_water_quality.geojson`.
 - `export_slopes.py` converts `data/bengaluru-slopes/*.kml` into `dashboard/public/Moddata/bengaluru_slopes.geojson` for comparing SWDs against terrain slope classes.

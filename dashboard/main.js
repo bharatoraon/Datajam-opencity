@@ -22,6 +22,12 @@ const formatMeasurement = (value, unit = 'mg/L') => {
   return Number.isFinite(number) ? `${number.toLocaleString()}${unit ? ` ${unit}` : ''}` : 'N/A';
 };
 
+const formatDistance = (value) => {
+  if (value === null || value === undefined || value === '') return 'N/A';
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number.toLocaleString()} m` : 'N/A';
+};
+
 const initLayers = () => {
   // --- SOURCES ---
   map.addSource('risk-zones', { type: 'geojson', data: './contamination_risk_zones.geojson' });
@@ -270,8 +276,14 @@ const initLayers = () => {
     type: 'heatmap',
     source: 'risk-zones',
     paint: {
-      // Increase the heatmap weight based on density
-      'heatmap-weight': 1,
+      // Weight density by the calculated hotspot score.
+      'heatmap-weight': [
+        'interpolate',
+        ['linear'],
+        ['to-number', ['get', 'risk_score'], 0],
+        0, 0,
+        100, 1
+      ],
       // Increase the heatmap color weight weight by zoom level
       // heatmap-intensity is a multiplier on top of heatmap-weight
       'heatmap-intensity': [
@@ -302,6 +314,35 @@ const initLayers = () => {
         15, 10
       ],
       'heatmap-opacity': 0.9
+    }
+  });
+
+  // Scored drain/sewage contamination hotspots
+  map.addLayer({
+    id: 'layer-risk-hotspots',
+    type: 'circle',
+    source: 'risk-zones',
+    minzoom: 11,
+    paint: {
+      'circle-color': [
+        'match',
+        ['get', 'risk_category'],
+        'Very High', '#7f1d1d',
+        'High', '#dc2626',
+        'Moderate', '#f97316',
+        'Elevated', '#facc15',
+        '#06b6d4'
+      ],
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['to-number', ['get', 'risk_score'], 0],
+        20, 4,
+        100, 11
+      ],
+      'circle-opacity': 0.9,
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 1
     }
   });
 
@@ -417,6 +458,45 @@ const initLayers = () => {
   });
   
   setupToggleControls();
+
+  // Add click interaction for scored contamination hotspots
+  map.on('click', 'layer-risk-hotspots', (e) => {
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const props = e.features[0].properties;
+
+    const categoryColor = {
+      'Very High': '#7f1d1d',
+      'High': '#dc2626',
+      'Moderate': '#f97316',
+      'Elevated': '#facc15',
+      'Low': '#06b6d4'
+    }[props.risk_category] || 'var(--accent-cyan)';
+
+    let popupContent = `<div class="popup-custom">`;
+    popupContent += `<h4>Contamination Hotspot</h4>`;
+    popupContent += `<div class="popup-details">`;
+    popupContent += `<p><strong>Risk Score:</strong> <span style="color:${categoryColor}; font-weight:bold;">${props.risk_score || 0} (${props.risk_category || 'N/A'})</span></p>`;
+    popupContent += `<p><strong>Drivers:</strong> ${props.risk_factors || 'N/A'}</p>`;
+    popupContent += `<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">`;
+    popupContent += `<p><strong>Sewage Distance:</strong> ${formatDistance(props.sewage_distance_m)}</p>`;
+    popupContent += `<p><strong>Manhole Distance:</strong> ${formatDistance(props.manhole_distance_m)}</p>`;
+    popupContent += `<p><strong>Typology:</strong> ${props.typology_names || props.typology_codes || 'N/A'}</p>`;
+    popupContent += `<p><strong>Drain:</strong> ${props.drain_class || 'N/A'} ${props.drain_id || ''}</p>`;
+    popupContent += `<p><strong>Ward:</strong> ${props.ward_name || 'N/A'}</p>`;
+    popupContent += `</div></div>`;
+
+    new maplibregl.Popup({ className: 'custom-popup', maxWidth: '320px' })
+      .setLngLat(coordinates)
+      .setHTML(popupContent)
+      .addTo(map);
+  });
+
+  map.on('mouseenter', 'layer-risk-hotspots', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'layer-risk-hotspots', () => {
+    map.getCanvas().style.cursor = '';
+  });
 
   // Add click interaction for Citizen Audits
   map.on('click', 'layer-audits', (e) => {
@@ -648,7 +728,7 @@ function setupToggleControls() {
     'toggle-parks': ['layer-parks'],
     'toggle-audits': ['layer-audits'],
     'toggle-groundwater-quality': ['layer-groundwater-quality'],
-    'toggle-risk': ['layer-risk-heatmap'],
+    'toggle-risk': ['layer-risk-heatmap', 'layer-risk-hotspots'],
     'toggle-ward-risk': ['layer-ward-risk'],
     'toggle-raw-water': ['layer-raw-water'],
     'toggle-raw-sewage': ['layer-raw-sewage'],
@@ -695,5 +775,10 @@ function animateValue(obj, start, end, duration) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const counter = document.getElementById('risk-count');
-  if(counter) animateValue(counter, 0, 25210, 2000);
+  if (!counter) return;
+
+  fetch('./contamination_risk_zones.geojson')
+    .then((response) => response.ok ? response.json() : Promise.reject(new Error('risk layer unavailable')))
+    .then((data) => animateValue(counter, 0, data.features?.length || 0, 2000))
+    .catch(() => animateValue(counter, 0, 0, 2000));
 });

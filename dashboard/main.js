@@ -16,23 +16,144 @@ map.addControl(new maplibregl.NavigationControl({
   visualizePitch: true
 }), 'bottom-right');
 
+const formatMeasurement = (value, unit = 'mg/L') => {
+  if (value === null || value === undefined || value === '') return 'N/A';
+  const number = Number(value);
+  return Number.isFinite(number) ? `${number.toLocaleString()}${unit ? ` ${unit}` : ''}` : 'N/A';
+};
+
 const initLayers = () => {
   // --- SOURCES ---
   map.addSource('risk-zones', { type: 'geojson', data: './contamination_risk_zones.geojson' });
   map.addSource('primary-drains', { type: 'geojson', data: './Moddata/mod-foundation_primarydrains.geojson' });
   map.addSource('secondary-drains', { type: 'geojson', data: './Moddata/mod-foundation_secondarydrains.geojson' });
+  map.addSource('valley-systems', { type: 'geojson', data: './Moddata/mod-foundation_valley.geojson' });
+  map.addSource('watershed-basins', { type: 'geojson', data: './Moddata/mod-foundation_valley_subbasins.geojson' });
+  map.addSource('natural-stream-order', { type: 'geojson', data: './Moddata/mod-foundation_streamorder.geojson' });
+  map.addSource('land-slopes', { type: 'geojson', data: './Moddata/bengaluru_slopes.geojson' });
   map.addSource('lakes-existing', { type: 'geojson', data: './Moddata/mod-foundation_lakes_existing.geojson' });
   map.addSource('lakes-lost', { type: 'geojson', data: './Moddata/mod-foundation_lakes_lost.geojson' });
+  map.addSource('lake-water-quality', { type: 'geojson', data: './Moddata/lake_water_quality.geojson' });
   map.addSource('parks', { type: 'geojson', data: './Moddata/mod-foundation_parks.geojson' });
   map.addSource('audits', { type: 'geojson', data: './Moddata/audits.geojson' });
+  map.addSource('groundwater-quality', { type: 'geojson', data: './Moddata/groundwater_quality.geojson' });
   map.addSource('raw-water', { type: 'geojson', data: './Moddata/raw_water.geojson' });
   map.addSource('raw-sewage', { type: 'geojson', data: './Moddata/raw_sewage.geojson' });
   map.addSource('raw-manholes', { type: 'geojson', data: './Moddata/raw_manholes.geojson' });
   map.addSource('ward-risk', { type: 'geojson', data: './Moddata/ward_risk_thematic.geojson' });
-  map.addSource('slums', { type: 'geojson', data: './Moddata/slums.geojson' });
 
   // --- LAYERS ---
   
+  // Land slope classes: natural terrain context for drainage alignment
+  map.addLayer({
+    id: 'layer-land-slopes',
+    type: 'fill',
+    source: 'land-slopes',
+    layout: { 'visibility': 'none' },
+    paint: {
+      'fill-color': [
+        'match',
+        ['get', 'slope'],
+        '0-1%', '#d9f99d',
+        '1-3%', '#bef264',
+        '3-5%', '#fde047',
+        '5-10%', '#fb923c',
+        '10-15%', '#f97316',
+        '15-35%', '#dc2626',
+        '35 - 50%', '#7f1d1d',
+        '#94a3b8'
+      ],
+      'fill-opacity': 0.22,
+      'fill-outline-color': 'rgba(255,255,255,0.15)'
+    }
+  });
+
+  // Valley systems: major natural drainage catchments
+  map.addLayer({
+    id: 'layer-valley-systems',
+    type: 'fill',
+    source: 'valley-systems',
+    layout: { 'visibility': 'none' },
+    paint: {
+      'fill-color': [
+        'match',
+        ['get', 'valley'],
+        'Arkavathi Valley', 'rgba(34, 197, 94, 0.18)',
+        'Hebbal Nagawara Valley', 'rgba(14, 165, 233, 0.18)',
+        'Koramangala Challaghatta Valley', 'rgba(168, 85, 247, 0.18)',
+        'Suvarnamukhi Valley', 'rgba(250, 204, 21, 0.16)',
+        'Vrishabhavati Valley', 'rgba(249, 115, 22, 0.16)',
+        'rgba(148, 163, 184, 0.14)'
+      ],
+      'fill-outline-color': '#e0f2fe'
+    }
+  });
+
+  map.addLayer({
+    id: 'layer-valley-boundaries',
+    type: 'line',
+    source: 'valley-systems',
+    layout: { 'visibility': 'none' },
+    paint: {
+      'line-color': '#e0f2fe',
+      'line-width': 2.2,
+      'line-opacity': 0.9
+    }
+  });
+
+  map.addLayer({
+    id: 'layer-valley-labels',
+    type: 'symbol',
+    source: 'valley-systems',
+    layout: {
+      'visibility': 'none',
+      'text-field': ['get', 'valley'],
+      'text-font': ['Noto Sans Regular'],
+      'text-size': 12,
+      'text-max-width': 14,
+      'text-allow-overlap': false
+    },
+    paint: {
+      'text-color': '#e0f2fe',
+      'text-halo-color': '#0f172a',
+      'text-halo-width': 1.4
+    }
+  });
+
+  // Watershed/sub-basin boundaries: finer natural drainage divisions
+  map.addLayer({
+    id: 'layer-watershed-basins',
+    type: 'line',
+    source: 'watershed-basins',
+    layout: { 'visibility': 'none' },
+    paint: {
+      'line-color': '#facc15',
+      'line-width': 1.7,
+      'line-dasharray': [2, 2],
+      'line-opacity': 0.85
+    }
+  });
+
+  // Natural stream order: inferred flow paths for comparing SWD alignment
+  map.addLayer({
+    id: 'layer-natural-stream-order',
+    type: 'line',
+    source: 'natural-stream-order',
+    layout: { 'visibility': 'none' },
+    paint: {
+      'line-color': '#22d3ee',
+      'line-width': [
+        'interpolate',
+        ['linear'],
+        ['to-number', ['get', 'ORD_FLOW']],
+        1, 0.8,
+        6, 2.2,
+        11, 4
+      ],
+      'line-opacity': 0.8
+    }
+  });
+
   // Parks & Wetlands
   map.addLayer({
     id: 'layer-parks',
@@ -40,9 +161,9 @@ const initLayers = () => {
     source: 'parks',
     layout: { 'visibility': 'none' },
     paint: {
-      'fill-color': '#22c55e', // Solid Green
-      'fill-opacity': 0.5,
-      'fill-outline-color': '#166534'
+      'fill-color': '#16a34a',
+      'fill-opacity': 0.2,
+      'fill-outline-color': '#15803d'
     }
   });
 
@@ -53,9 +174,9 @@ const initLayers = () => {
     source: 'lakes-lost',
     layout: { 'visibility': 'none' },
     paint: {
-      'fill-color': '#64748b', // Slate
-      'fill-opacity': 0.5,
-      'fill-outline-color': '#334155'
+      'fill-color': '#4b5563',
+      'fill-opacity': 0.4,
+      'fill-outline-color': '#9ca3af'
     }
   });
 
@@ -64,11 +185,58 @@ const initLayers = () => {
     id: 'layer-lakes-existing',
     type: 'fill',
     source: 'lakes-existing',
-    layout: { 'visibility': 'none' },
     paint: {
-      'fill-color': '#0d9488', // Teal
-      'fill-opacity': 0.6,
-      'fill-outline-color': '#115e59'
+      'fill-color': '#3b82f6',
+      'fill-opacity': 0.5,
+      'fill-outline-color': '#60a5fa'
+    }
+  });
+
+  // Latest Lake Water Quality (PDF-derived pollution levels)
+  map.addLayer({
+    id: 'layer-lake-water-quality',
+    type: 'fill',
+    source: 'lake-water-quality',
+    paint: {
+      'fill-color': [
+        'match',
+        ['get', 'pollution_level'],
+        'Severe', '#dc2626',
+        'High', '#f97316',
+        'Moderate', '#facc15',
+        'Low', '#22c55e',
+        '#94a3b8'
+      ],
+      'fill-opacity': 0.62,
+      'fill-outline-color': '#ffffff'
+    }
+  });
+
+  // Labels for PDF monitoring locations on matched lake geometries
+  map.addLayer({
+    id: 'layer-lake-water-quality-labels',
+    type: 'symbol',
+    source: 'lake-water-quality',
+    minzoom: 10.5,
+    layout: {
+      'text-field': ['get', 'monitoring_location'],
+      'text-font': ['Noto Sans Regular'],
+      'text-size': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        10.5, 10,
+        14, 13
+      ],
+      'text-max-width': 12,
+      'text-allow-overlap': false,
+      'text-ignore-placement': false
+    },
+    paint: {
+      'text-color': '#f8fafc',
+      'text-halo-color': '#0f172a',
+      'text-halo-width': 1.5,
+      'text-halo-blur': 0.5
     }
   });
 
@@ -77,9 +245,8 @@ const initLayers = () => {
     id: 'layer-secondary-drains',
     type: 'line',
     source: 'secondary-drains',
-    layout: { 'visibility': 'none' },
     paint: {
-      'line-color': '#0ea5e9', // Sky Blue
+      'line-color': '#60a5fa',
       'line-width': 1.5,
       'line-opacity': 0.8
     }
@@ -90,9 +257,8 @@ const initLayers = () => {
     id: 'layer-primary-drains',
     type: 'line',
     source: 'primary-drains',
-    layout: { 'visibility': 'none' },
     paint: {
-      'line-color': '#1d4ed8', // Navy Blue
+      'line-color': '#1d4ed8',
       'line-width': 3,
       'line-opacity': 0.9
     }
@@ -152,6 +318,33 @@ const initLayers = () => {
     }
   });
 
+  // Groundwater Quality (Measured Well Samples)
+  map.addLayer({
+    id: 'layer-groundwater-quality',
+    type: 'circle',
+    source: 'groundwater-quality',
+    paint: {
+      'circle-color': [
+        'match',
+        ['get', 'status'],
+        'High concern', '#ef4444',
+        'Caution', '#f59e0b',
+        'Within limits', '#22c55e',
+        '#94a3b8'
+      ],
+      'circle-radius': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        9, 5,
+        14, 9
+      ],
+      'circle-stroke-color': '#ffffff',
+      'circle-stroke-width': 1.5,
+      'circle-opacity': 0.9
+    }
+  });
+
   // Raw Manholes (Points)
   map.addLayer({
     id: 'layer-raw-manholes',
@@ -185,12 +378,11 @@ const initLayers = () => {
     source: 'raw-water',
     layout: { 'visibility': 'none' },
     paint: {
-      'line-color': '#3b82f6', // Bright Blue
+      'line-color': '#38bdf8', // Light Blue
       'line-width': 1.5,
       'line-opacity': 0.7
     }
   });
-
 
   // Ward Risk Choropleth
   map.addLayer({
@@ -213,19 +405,6 @@ const initLayers = () => {
       'fill-outline-color': '#ffffff'
     }
   }, 'layer-risk-heatmap'); // Place underneath the risk heatmap points if possible
-
-  // Slum Boundaries
-  map.addLayer({
-    id: 'layer-slums',
-    type: 'fill',
-    source: 'slums',
-    layout: { 'visibility': 'none' },
-    paint: {
-      'fill-color': '#e11d48', // Rose
-      'fill-opacity': 0.5,
-      'fill-outline-color': '#9f1239' // Dark Rose
-    }
-  });
 
   // Cinematic FlyTo
   map.flyTo({
@@ -278,6 +457,140 @@ const initLayers = () => {
     map.getCanvas().style.cursor = '';
   });
 
+  // Add click interaction for Groundwater Quality samples
+  map.on('click', 'layer-groundwater-quality', (e) => {
+    const coordinates = e.features[0].geometry.coordinates.slice();
+    const props = e.features[0].properties;
+    const statusColor = {
+      'High concern': '#ef4444',
+      'Caution': '#f59e0b',
+      'Within limits': '#22c55e'
+    }[props.status] || 'var(--accent-cyan)';
+
+    let popupContent = `<div class="popup-custom">`;
+    popupContent += `<h4>Groundwater Quality</h4>`;
+    popupContent += `<div class="popup-details">`;
+    popupContent += `<p><strong>Village:</strong> ${props.village || 'Unknown'}</p>`;
+    popupContent += `<p><strong>Taluk:</strong> ${props.taluk || 'Unknown'}</p>`;
+    popupContent += `<p><strong>Status:</strong> <span style="color:${statusColor}; font-weight:bold;">${props.status || 'N/A'}</span></p>`;
+    popupContent += `<p><strong>Issues:</strong> ${props.issues || 'None'}</p>`;
+    popupContent += `<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">`;
+    popupContent += `<p><strong>Nitrate:</strong> ${formatMeasurement(props.nitrate_mg_l)}</p>`;
+    popupContent += `<p><strong>Fluoride:</strong> ${formatMeasurement(props.fluoride_mg_l)}</p>`;
+    popupContent += `<p><strong>Iron:</strong> ${formatMeasurement(props.iron_mg_l)}</p>`;
+    popupContent += `<p><strong>Total Hardness:</strong> ${formatMeasurement(props.hardness_mg_l)}</p>`;
+    popupContent += `</div></div>`;
+
+    new maplibregl.Popup({ className: 'custom-popup', maxWidth: '300px' })
+      .setLngLat(coordinates)
+      .setHTML(popupContent)
+      .addTo(map);
+  });
+
+  // Change cursor on hover for groundwater samples
+  map.on('mouseenter', 'layer-groundwater-quality', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'layer-groundwater-quality', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
+  // Add click interaction for latest lake water-quality report
+  map.on('click', 'layer-lake-water-quality', (e) => {
+    const props = e.features[0].properties;
+    const levelColor = {
+      'Severe': '#dc2626',
+      'High': '#f97316',
+      'Moderate': '#facc15',
+      'Low': '#22c55e'
+    }[props.pollution_level] || 'var(--accent-cyan)';
+
+    let popupContent = `<div class="popup-custom">`;
+    popupContent += `<h4>${props.monitoring_location || props.matched_lake_name || 'Lake Water Quality'}</h4>`;
+    popupContent += `<div class="popup-details">`;
+    popupContent += `<p><strong>Report:</strong> ${props.report_month_name || ''} ${props.report_year || ''}</p>`;
+    popupContent += `<p><strong>Matched Map Lake:</strong> ${props.matched_lake_name || 'N/A'}</p>`;
+    popupContent += `<p><strong>Pollution Level:</strong> <span style="color:${levelColor}; font-weight:bold;">${props.pollution_level || 'N/A'}</span></p>`;
+    popupContent += `<p><strong>Main Drivers:</strong> ${props.pollution_drivers || 'None'}</p>`;
+    popupContent += `<hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">`;
+    popupContent += `<p><strong>Dissolved O2:</strong> ${formatMeasurement(props.dissolved_oxygen_mg_l)}</p>`;
+    popupContent += `<p><strong>BOD:</strong> ${formatMeasurement(props.bod_mg_l)}</p>`;
+    popupContent += `<p><strong>COD:</strong> ${formatMeasurement(props.cod_mg_l)}</p>`;
+    popupContent += `<p><strong>Fecal Coliform:</strong> ${formatMeasurement(props.fecal_coliform_mpn_100ml, 'MPN/100ml')}</p>`;
+    popupContent += `<p><strong>Total Coliform:</strong> ${formatMeasurement(props.total_coliform_mpn_100ml, 'MPN/100ml')}</p>`;
+    popupContent += `<p><strong>Turbidity:</strong> ${formatMeasurement(props.turbidity_ntu, 'NTU')}</p>`;
+    popupContent += `<p><strong>pH:</strong> ${formatMeasurement(props.ph, '')}</p>`;
+    popupContent += `</div></div>`;
+
+    new maplibregl.Popup({ className: 'custom-popup', maxWidth: '320px' })
+      .setLngLat(e.lngLat)
+      .setHTML(popupContent)
+      .addTo(map);
+  });
+
+  // Change cursor on hover for lake water-quality polygons
+  map.on('mouseenter', 'layer-lake-water-quality', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'layer-lake-water-quality', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
+  // Add click interaction for valley systems
+  map.on('click', 'layer-valley-systems', (e) => {
+    const props = e.features[0].properties;
+    const popupContent = `
+      <div class="popup-custom">
+        <h4>${props.valley || 'Valley System'}</h4>
+        <div class="popup-details">
+          <p><strong>Basin ID:</strong> ${props.Basin_ID || 'N/A'}</p>
+          <p><strong>HydroBASINS ID:</strong> ${props.HYBAS_ID || 'N/A'}</p>
+          <p><strong>Upstream Area:</strong> ${formatMeasurement(props.UP_AREA, 'sq km')}</p>
+          <p><strong>Sub Area:</strong> ${formatMeasurement(props.SUB_AREA, 'sq km')}</p>
+        </div>
+      </div>
+    `;
+
+    new maplibregl.Popup({ className: 'custom-popup', maxWidth: '280px' })
+      .setLngLat(e.lngLat)
+      .setHTML(popupContent)
+      .addTo(map);
+  });
+
+  map.on('mouseenter', 'layer-valley-systems', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'layer-valley-systems', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
+  // Add click interaction for slope classes
+  map.on('click', 'layer-land-slopes', (e) => {
+    const props = e.features[0].properties;
+    const popupContent = `
+      <div class="popup-custom">
+        <h4>Land Slope</h4>
+        <div class="popup-details">
+          <p><strong>Slope Class:</strong> ${props.slope || 'N/A'}</p>
+          <p><strong>Description:</strong> ${props.description || 'N/A'}</p>
+          <p><strong>Slope Code:</strong> ${props.slope_code || 'N/A'}</p>
+        </div>
+      </div>
+    `;
+
+    new maplibregl.Popup({ className: 'custom-popup', maxWidth: '260px' })
+      .setLngLat(e.lngLat)
+      .setHTML(popupContent)
+      .addTo(map);
+  });
+
+  map.on('mouseenter', 'layer-land-slopes', () => {
+    map.getCanvas().style.cursor = 'pointer';
+  });
+  map.on('mouseleave', 'layer-land-slopes', () => {
+    map.getCanvas().style.cursor = '';
+  });
+
   // Add click interaction for Ward Risk Choropleth
   map.on('click', 'layer-ward-risk', (e) => {
     const props = e.features[0].properties;
@@ -287,10 +600,6 @@ const initLayers = () => {
     
     popupContent += `<div class="popup-details">`;
     popupContent += `<p><strong>Contamination Risk Points:</strong> <span style="color:var(--accent-cyan); font-weight:bold;">${props.risk_count || 0}</span></p>`;
-    
-    if (props.slum_count > 0) {
-      popupContent += `<p><strong>Number of Slums:</strong> <span style="color:#f43f5e; font-weight:bold;">${props.slum_count}</span></p>`;
-    }
     
     // Socioeconomic Data
     if (props.TOT_P) {
@@ -329,13 +638,18 @@ function setupToggleControls() {
   const toggles = {
     'toggle-primary-drains': ['layer-primary-drains'],
     'toggle-secondary-drains': ['layer-secondary-drains'],
+    'toggle-valley-systems': ['layer-valley-systems', 'layer-valley-boundaries', 'layer-valley-labels'],
+    'toggle-watershed-basins': ['layer-watershed-basins'],
+    'toggle-natural-stream-order': ['layer-natural-stream-order'],
+    'toggle-land-slopes': ['layer-land-slopes'],
     'toggle-lakes-existing': ['layer-lakes-existing'],
     'toggle-lakes-lost': ['layer-lakes-lost'],
+    'toggle-lake-water-quality': ['layer-lake-water-quality', 'layer-lake-water-quality-labels'],
     'toggle-parks': ['layer-parks'],
     'toggle-audits': ['layer-audits'],
+    'toggle-groundwater-quality': ['layer-groundwater-quality'],
     'toggle-risk': ['layer-risk-heatmap'],
     'toggle-ward-risk': ['layer-ward-risk'],
-    'toggle-slums': ['layer-slums'],
     'toggle-raw-water': ['layer-raw-water'],
     'toggle-raw-sewage': ['layer-raw-sewage'],
     'toggle-raw-manholes': ['layer-raw-manholes']
@@ -344,6 +658,13 @@ function setupToggleControls() {
   for (const [checkboxId, layerIds] of Object.entries(toggles)) {
     const checkbox = document.getElementById(checkboxId);
     if (checkbox) {
+      const initialVisibility = checkbox.checked ? 'visible' : 'none';
+      layerIds.forEach(layerId => {
+        if (map.getLayer(layerId)) {
+          map.setLayoutProperty(layerId, 'visibility', initialVisibility);
+        }
+      });
+
       checkbox.addEventListener('change', (e) => {
         const visibility = e.target.checked ? 'visible' : 'none';
         layerIds.forEach(layerId => {
@@ -375,42 +696,4 @@ function animateValue(obj, start, end, duration) {
 document.addEventListener('DOMContentLoaded', () => {
   const counter = document.getElementById('risk-count');
   if(counter) animateValue(counter, 0, 25210, 2000);
-
-  // Load and render Ward Rankings
-  fetch('./Moddata/ward_rankings.json')
-    .then(res => res.json())
-    .then(data => {
-      const list = document.getElementById('ward-ranking-list');
-      if (!list) return;
-      list.innerHTML = '';
-      
-      data.slice(0, 50).forEach((ward, index) => {
-        if (!ward.ward_name || ward.risk_count === 0) return;
-        
-        const li = document.createElement('li');
-        li.style.padding = '8px 12px';
-        li.style.borderBottom = '1px solid var(--border-color)';
-        li.style.display = 'flex';
-        li.style.justifyContent = 'space-between';
-        li.style.alignItems = 'center';
-        li.style.fontSize = '0.85rem';
-        
-        let rankColor = '#ef4444'; // Red
-        let bgOpacity = '0.1';
-        
-        if (index === 0) { rankColor = '#fca5a5'; bgOpacity = '0.3'; } // Highlight top 1
-        else if (index < 3) { rankColor = '#f87171'; bgOpacity = '0.15'; } // Highlight top 3
-        
-        li.innerHTML = `
-          <span style="font-weight: 500; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;" title="${ward.ward_name}">${index + 1}. ${ward.ward_name}</span>
-          <span style="font-weight: bold; color: ${rankColor}; background: rgba(239, 68, 68, ${bgOpacity}); padding: 2px 6px; border-radius: 4px;" title="${ward.risk_count} Risk Intersections">${ward.risk_count}</span>
-        `;
-        list.appendChild(li);
-      });
-      
-      if (list.lastChild) {
-        list.lastChild.style.borderBottom = 'none';
-      }
-    })
-    .catch(err => console.error('Error loading ward rankings:', err));
 });

@@ -1,0 +1,191 @@
+[
+  {
+    "stn_code": "3597",
+    "monitoring_location": "Hesaraghatta Lake",
+    "pollution_level": "Moderate",
+    "pollution_score": 3,
+    "match_score": 0.667
+  },
+  {
+    "stn_code": "3599",
+    "monitoring_location": "Anchepalya Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 10,
+    "match_score": 0.667
+  },
+  {
+    "stn_code": "3603",
+    "monitoring_location": "Vengaiyyanakere( Kr Puram Lake )",
+    "pollution_level": "Severe",
+    "pollution_score": 13,
+    "match_score": 0.629
+  },
+  {
+    "stn_code": "3612",
+    "monitoring_location": "Agaram Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 10,
+    "match_score": 0.714
+  },
+  {
+    "stn_code": "3622",
+    "monitoring_location": "Somasundrapalya Lake",
+    "pollution_level": "High",
+    "pollution_score": 5,
+    "match_score": 0.692
+  },
+  {
+    "stn_code": "3636",
+    "monitoring_location": "Hoskere Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 17,
+    "match_score": 0.7
+  },
+  {
+    "stn_code": "3642",
+    "monitoring_location": "Jigani Tank",
+    "pollution_level": "High",
+    "pollution_score": 8,
+    "match_score": 0.588
+  },
+  {
+    "stn_code": "3655",
+    "monitoring_location": "Mathikere Tank",
+    "pollution_level": "Severe",
+    "pollution_score": 9,
+    "match_score": 0.625
+  },
+  {
+    "stn_code": "4513",
+    "monitoring_location": "Ramammana Kere",
+    "pollution_level": "Severe",
+    "pollution_score": 9,
+    "match_score": 0.625
+  },
+  {
+    "stn_code": "4527",
+    "monitoring_location": "Sheelavanta-Whitefield Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 19,
+    "match_score": 0.514
+  },
+  {
+    "stn_code": "4532",
+    "monitoring_location": "Chandapura Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 15,
+    "match_score": 0.7
+  },
+  {
+    "stn_code": "4537",
+    "monitoring_location": "Chinnakurchi Kere",
+    "pollution_level": "High",
+    "pollution_score": 5,
+    "match_score": 0.636
+  },
+  {
+    "stn_code": "5558",
+    "monitoring_location": "Kannahalli Lake Kannahalli, Bengaluru",
+    "pollution_level": "Severe",
+    "pollution_score": 17,
+    "match_score": 0.6
+  },
+  {
+    "stn_code": "5561",
+    "monitoring_location": "Munekolalu Lake ,Marathahalli, East Taluka",
+    "pollution_level": "Severe",
+    "pollution_score": 20,
+    "match_score": 0.667
+  },
+  {
+    "stn_code": "5562",
+    "monitoring_location": "Mahadevpuraâ Lake, K. R. Puram , Bangalore East Taluka",
+    "pollution_level": "Severe",
+    "pollution_score": 14,
+    "match_score": 0.686
+  },
+  {
+    "stn_code": "5563",
+    "monitoring_location": "Segehalli Lake Baavanapura Road Battarahalli , Bangalore",
+    "pollution_level": "Severe",
+    "pollution_score": 18,
+    "match_score": 0.604
+  },
+  {
+    "stn_code": "5564",
+    "monitoring_location": "Kannamangala Lake Hoskote Main Road , Bengalore",
+    "pollution_level": "Severe",
+    "pollution_score": 11,
+    "match_score": 0.647
+  },
+  {
+    "stn_code": "5570",
+    "monitoring_location": "Soulkere, Kaikondrahalli Vill,Bengaluru",
+    "pollution_level": "Moderate",
+    "pollution_score": 4,
+    "match_score": 0.632
+  },
+  {
+    "stn_code": "5572",
+    "monitoring_location": "Kudlu Chikkakere, Bgp Layout Kudlu Vill ,Bengaluru",
+    "pollution_level": "Severe",
+    "pollution_score": 15,
+    "match_score": 0.613
+  },
+  {
+    "stn_code": "5573",
+    "monitoring_location": "Doddathogur Lake , Doddathoguru Vill,Bengaluru",
+    "pollution_level": "High",
+    "pollution_score": 5,
+    "match_score": 0.462
+  },
+  {
+    "stn_code": "5821",
+    "monitoring_location": "Kembhatahali Lake-66, Kothannur, 1St Phase ,",
+    "pollution_level": "Moderate",
+    "pollution_score": 4,
+    "match_score": 0.468
+  },
+  {
+    "stn_code": "5822",
+    "monitoring_location": "Doddakammanahalli Lake, Doddakammanahalli Phase2,",
+    "pollution_level": "High",
+    "pollution_score": 5,
+    "match_score": 0.535
+  },
+  {
+    "stn_code": "5825",
+    "monitoring_location": "Lower Amblipura Lake, Pwd Quarters,1St Sector, Hsr",
+    "pollution_level": "Moderate",
+    "pollution_score": 4,
+    "match_score": 0.373
+  },
+  {
+    "stn_code": "5826",
+    "monitoring_location": "Bhoganhalli Lake, Bhoganhalli,, Bengaluru",
+    "pollution_level": "High",
+    "pollution_score": 7,
+    "match_score": 0.629
+  },
+  {
+    "stn_code": "5829",
+    "monitoring_location": "Vittasandra Lake, Vittasandra,",
+    "pollution_level": "Moderate",
+    "pollution_score": 2,
+    "match_score": 0.522
+  },
+  {
+    "stn_code": "5830",
+    "monitoring_location": "Akshyanagara Lake, Akshyanagara West, Bengaluru",
+    "pollution_level": "High",
+    "pollution_score": 5,
+    "match_score": 0.553
+  },
+  {
+    "stn_code": "5833",
+    "monitoring_location": "Doddagubbi Lake",
+    "pollution_level": "Severe",
+    "pollution_score": 25,
+    "match_score": 0.636
+  }
+]

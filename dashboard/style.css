@@ -1,6 +1,6 @@
 :root {
   --bg-dark: #0f172a;
-  --bg-sidebar: #1e293b;
+  --bg-sidebar: rgba(15, 23, 42, 0.75);
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --accent-cyan: #06b6d4;
@@ -42,8 +42,10 @@ body {
   max-height: calc(100vh - 40px);
   z-index: 10;
   background: var(--bg-sidebar);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -131,6 +133,16 @@ h1 {
   font-weight: 700;
   color: var(--accent-cyan);
   text-shadow: 0 0 20px var(--accent-cyan-glow);
+}
+
+.metric-value.groundwater {
+  color: #f59e0b;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.metric-value.lake {
+  color: #ef4444;
+  text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 .metric-label {
@@ -251,6 +263,73 @@ h1 {
   box-shadow: 0 0 8px var(--accent-cyan);
 }
 
+.color-line.valley {
+  background: #e0f2fe;
+  box-shadow: 0 0 8px rgba(224, 242, 254, 0.6);
+}
+
+.color-line.watershed {
+  height: 0;
+  border-top: 3px dashed #facc15;
+  background: transparent;
+}
+
+.color-line.stream {
+  background: #22d3ee;
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
+
+.slope-scale-bar {
+  height: 8px;
+  width: 100%;
+  border-radius: 4px;
+  background: linear-gradient(to right, #d9f99d, #fde047, #fb923c, #dc2626, #7f1d1d);
+  margin-bottom: 4px;
+}
+
+.color-box {
+  width: 18px;
+  height: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 3px;
+}
+
+.color-box.severe {
+  background: #dc2626;
+}
+
+.color-box.high {
+  background: #f97316;
+}
+
+.color-box.moderate {
+  background: #facc15;
+}
+
+.color-box.low {
+  background: #22c55e;
+}
+
+.color-dot {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+}
+
+.color-dot.red {
+  background: #ef4444;
+}
+
+.color-dot.amber {
+  background: #f59e0b;
+}
+
+.color-dot.green {
+  background: #22c55e;
+}
+
 .legend-note {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -274,7 +353,8 @@ footer {
   right: 10px;
 }
 .maplibregl-ctrl-group {
-  background: var(--bg-sidebar) !important;
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(8px);
   border: 1px solid var(--border-color) !important;
   border-radius: 8px !important;
 }
@@ -285,8 +365,10 @@ footer {
 /* Custom Popup Styling */
 .custom-popup .maplibregl-popup-content {
   background: var(--bg-sidebar);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--text-main);
   padding: 16px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);

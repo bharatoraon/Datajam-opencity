@@ -1,5 +1,6 @@
 import os
 import glob
+import xml.etree.ElementTree as ET
 import pandas as pd
 import geopandas as gpd
 import fiona
@@ -10,20 +11,62 @@ from shapely import force_2d
 fiona.drvsupport.supported_drivers['KML'] = 'rw'
 
 # Setup paths
-BASE_DIR = '/Users/bharatoraon/Desktop/Datajam'
-WATER_DIR = os.path.join(BASE_DIR, 'bwssb-water-supply-lines-map-of-bengaluru')
-SEWAGE_DIR = os.path.join(BASE_DIR, 'bwssb-sewerage-line-maps-for-bengaluru')
-MANHOLES_FILE = 'zip://' + os.path.join(BASE_DIR, 'bwssb-manholes-in-bengaluru', 'manholes.zip')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+WATER_DIR = os.path.join(DATA_DIR, 'bwssb-water-supply-lines-map-of-bengaluru')
+SEWAGE_DIR = os.path.join(DATA_DIR, 'bwssb-sewerage-line-maps-for-bengaluru')
+MANHOLES_DIR = os.path.join(DATA_DIR, 'bwssb-manholes-in-bengaluru')
+MANHOLES_FILE = 'zip://' + os.path.join(MANHOLES_DIR, 'manholes.zip')
 OUTPUT_FILE = os.path.join(BASE_DIR, 'contamination_risk_zones.geojson')
 
 # Coordinate Reference Systems
 CRS_WGS84 = 'EPSG:4326'  # Lat/Lon
 CRS_UTM43N = 'EPSG:32643' # Metric for Bengaluru
+KML_NS = {'kml': 'http://www.opengis.net/kml/2.2'}
+
+def parse_kml_coordinates(text):
+    """Parse a KML coordinate block into lon/lat tuples."""
+    coords = []
+    for item in (text or '').split():
+        parts = item.split(',')
+        if len(parts) < 2:
+            continue
+        try:
+            coords.append((float(parts[0]), float(parts[1])))
+        except ValueError:
+            continue
+    return coords
+
+def load_kml_with_xml(file):
+    """Fallback KML reader for files that GeoPandas/GDAL cannot parse."""
+    rows = []
+    root = ET.parse(file).getroot()
+
+    for placemark in root.findall('.//kml:Placemark', KML_NS):
+        name_elem = placemark.find('kml:name', KML_NS)
+        name = name_elem.text if name_elem is not None else None
+
+        for point in placemark.findall('.//kml:Point/kml:coordinates', KML_NS):
+            coords = parse_kml_coordinates(point.text)
+            if coords:
+                rows.append({'Name': name, 'geometry': Point(coords[0])})
+
+        for line in placemark.findall('.//kml:LineString/kml:coordinates', KML_NS):
+            coords = parse_kml_coordinates(line.text)
+            if len(coords) >= 2:
+                rows.append({'Name': name, 'geometry': LineString(coords)})
+
+        for ring in placemark.findall('.//kml:Polygon//kml:outerBoundaryIs//kml:LinearRing/kml:coordinates', KML_NS):
+            coords = parse_kml_coordinates(ring.text)
+            if len(coords) >= 3:
+                rows.append({'Name': name, 'geometry': Polygon(coords)})
+
+    return gpd.GeoDataFrame(rows, geometry='geometry', crs=CRS_WGS84)
 
 def load_kmls_from_dir(directory):
     """Load all KML files in a directory and return a combined GeoDataFrame."""
     gdfs = []
-    kml_files = glob.glob(os.path.join(directory, '*.kml'))
+    kml_files = glob.glob(os.path.join(directory, '**', '*.kml'), recursive=True)
     print(f"Found {len(kml_files)} KML files in {directory}")
     
     for file in kml_files:
@@ -35,7 +78,14 @@ def load_kmls_from_dir(directory):
             gdf.geometry = gdf.geometry.apply(lambda geom: force_2d(geom) if geom else None)
             gdfs.append(gdf)
         except Exception as e:
-            print(f"  Error reading {os.path.basename(file)}: {e}")
+            print(f"  GeoPandas error reading {os.path.basename(file)}: {e}")
+            print("  Trying XML fallback parser...")
+            try:
+                gdf = load_kml_with_xml(file)
+                print(f"  XML fallback loaded {len(gdf)} features.")
+                gdfs.append(gdf)
+            except Exception as fallback_error:
+                print(f"  Error reading {os.path.basename(file)}: {fallback_error}")
             
     if gdfs:
         combined = pd.concat(gdfs, ignore_index=True)
@@ -44,6 +94,19 @@ def load_kmls_from_dir(directory):
         return gpd.GeoDataFrame(combined, geometry='geometry', crs=CRS_WGS84)
     else:
         return gpd.GeoDataFrame(columns=['geometry'], crs=CRS_WGS84)
+
+def resolve_manholes_file():
+    """Return the manholes dataset path from the downloaded OpenCity folder."""
+    if os.path.exists(os.path.join(MANHOLES_DIR, 'manholes.zip')):
+        return MANHOLES_FILE
+
+    for pattern in ('*.zip', '*.geojson', '*.json', '*.shp', '*.gpkg', '*.kml'):
+        matches = glob.glob(os.path.join(MANHOLES_DIR, '**', pattern), recursive=True)
+        if matches:
+            path = matches[0]
+            return 'zip://' + path if path.endswith('.zip') else path
+
+    return MANHOLES_FILE
 
 def main():
     print("--- Loading Water Supply Lines ---")
@@ -56,7 +119,9 @@ def main():
     
     print("\n--- Loading Manholes ---")
     try:
-        manholes_gdf = gpd.read_file(MANHOLES_FILE)
+        manholes_file = resolve_manholes_file()
+        print(f"Reading manholes from {manholes_file}...")
+        manholes_gdf = gpd.read_file(manholes_file)
         manholes_gdf.geometry = manholes_gdf.geometry.apply(lambda geom: force_2d(geom) if geom else None)
         print(f"Total manhole features: {len(manholes_gdf)}")
     except Exception as e:

@@ -4,8 +4,9 @@ import geopandas as gpd
 from shapely.geometry import Point
 
 def main():
-    base_dir = '/Users/bharatoraon/Desktop/Datajam'
-    csv_path = os.path.join(base_dir, 'Moddata', 'mod-foundation_form-2.csv')
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base_dir, 'data')
+    csv_path = os.path.join(data_dir, 'Moddata', 'mod-foundation_form-2.csv')
     out_path = os.path.join(base_dir, 'dashboard', 'public', 'Moddata', 'audits.geojson')
     
     os.makedirs(os.path.dirname(out_path), exist_ok=True)

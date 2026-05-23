@@ -28,7 +28,7 @@
 
         <section class="description">
           <p>
-            Explore Bengaluru's stormwater and ecological infrastructure. Toggle the layers below to view primary and secondary drains, lakes, wetlands, and localized citizen audit reports.
+            Explore Bengaluru's stormwater and ecological infrastructure. Compare stormwater drains against natural valley systems, watershed boundaries, stream order, land slopes, water-quality reports, and contamination-risk layers.
           </p>
         </section>
 
@@ -42,6 +42,24 @@
             <input type="checkbox" id="toggle-secondary-drains" checked>
             <span class="toggle-label">Secondary Drains</span>
           </label>
+          <h3>Natural Drainage Context</h3>
+          <label class="layer-toggle">
+            <input type="checkbox" id="toggle-valley-systems" checked>
+            <span class="toggle-label">Valley Systems</span>
+          </label>
+          <label class="layer-toggle">
+            <input type="checkbox" id="toggle-watershed-basins" checked>
+            <span class="toggle-label">Watershed / Sub-basin Boundaries</span>
+          </label>
+          <label class="layer-toggle">
+            <input type="checkbox" id="toggle-natural-stream-order" checked>
+            <span class="toggle-label">Natural Stream Order</span>
+          </label>
+          <label class="layer-toggle">
+            <input type="checkbox" id="toggle-land-slopes">
+            <span class="toggle-label">Land Slope Classes</span>
+          </label>
+          <h3>Water Quality & Infrastructure</h3>
           <label class="layer-toggle">
             <input type="checkbox" id="toggle-lakes-existing" checked>
             <span class="toggle-label">Existing Lakes</span>
@@ -49,6 +67,10 @@
           <label class="layer-toggle">
             <input type="checkbox" id="toggle-lakes-lost">
             <span class="toggle-label">Lost Lakes</span>
+          </label>
+          <label class="layer-toggle">
+            <input type="checkbox" id="toggle-lake-water-quality" checked>
+            <span class="toggle-label">Lake Water Quality (Latest)</span>
           </label>
           <label class="layer-toggle">
             <input type="checkbox" id="toggle-parks">
@@ -59,16 +81,16 @@
             <span class="toggle-label">Citizen Audits (Water Quality)</span>
           </label>
           <label class="layer-toggle">
+            <input type="checkbox" id="toggle-groundwater-quality" checked>
+            <span class="toggle-label">Groundwater Quality Samples</span>
+          </label>
+          <label class="layer-toggle">
             <input type="checkbox" id="toggle-risk" checked>
             <span class="toggle-label">Contamination Risk (Heatmap)</span>
           </label>
           <label class="layer-toggle">
             <input type="checkbox" id="toggle-ward-risk">
             <span class="toggle-label">Ward Risk Density (Choropleth)</span>
-          </label>
-          <label class="layer-toggle">
-            <input type="checkbox" id="toggle-slums">
-            <span class="toggle-label">Slum Boundaries</span>
           </label>
           <label class="layer-toggle">
             <input type="checkbox" id="toggle-raw-water">
@@ -84,22 +106,23 @@
           </label>
         </section>
 
-        <section class="rankings" style="margin-bottom: 24px;">
-          <h3 style="font-family: var(--font-display); font-size: 1rem; margin-bottom: 12px; font-weight: 600;">Most Vulnerable Wards</h3>
-          <ul id="ward-ranking-list" style="list-style: none; padding: 0; margin: 0; max-height: 180px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; background: rgba(0, 0, 0, 0.2);">
-            <li style="padding: 8px 12px; font-size: 0.85rem; color: var(--text-muted);">Loading rankings...</li>
-          </ul>
-        </section>
-
         <section class="metrics">
           <div class="metric-card">
             <span class="metric-value" id="risk-count">25,210</span>
             <span class="metric-label">High-Risk Pipeline Segments</span>
           </div>
+          <div class="metric-card">
+            <span class="metric-value groundwater">67</span>
+            <span class="metric-label">Groundwater Quality Samples</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-value lake">93</span>
+            <span class="metric-label">Latest Lake Quality Overlays</span>
+          </div>
         </section>
 
         <section class="legend">
-          <h3>Map Legend</h3>
+          <h3>Legend</h3>
           
           <div class="legend-scale">
             <h4>Ward Risk Density</h4>
@@ -112,34 +135,65 @@
           </div>
           <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
 
-          <div class="legend-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <!-- Ecology -->
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #22c55e;"></div><span style="font-size:0.75rem;">Parks & Wetlands</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #0d9488;"></div><span style="font-size:0.75rem;">Lakes (Existing)</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #64748b;"></div><span style="font-size:0.75rem;">Lakes (Lost)</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #1d4ed8;"></div><span style="font-size:0.75rem;">Primary Drains</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #0ea5e9;"></div><span style="font-size:0.75rem;">Secondary Drains</span></div>
-            
-            <!-- Infrastructure -->
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #3b82f6;"></div><span style="font-size:0.75rem;">Water Supply</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #8b5cf6;"></div><span style="font-size:0.75rem;">Sewage Network</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #f59e0b; border-radius: 50%; width: 12px; height: 12px;"></div><span style="font-size:0.75rem;">Manholes</span></div>
-            
-            <!-- Audits & Slums -->
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #ec4899; border-radius: 50%; width: 12px; height: 12px;"></div><span style="font-size:0.75rem;">Citizen Audits</span></div>
-            <div class="legend-item" style="margin:0;"><div class="color-line" style="background: #e11d48;"></div><span style="font-size:0.75rem;">Slum Boundaries</span></div>
-          </div>
-          
-          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
-          <div class="legend-item" style="margin:0;">
+          <div class="legend-item">
             <div class="color-line cyan"></div>
-            <span style="font-size:0.8rem; font-weight:bold;">At-Risk Water Pipelines</span>
+            <span>At-Risk Water Supply Pipelines</span>
           </div>
+          <div class="legend-item">
+            <div class="color-line valley"></div>
+            <span>Valley System Boundary</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-line watershed"></div>
+            <span>Watershed / Sub-basin Boundary</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-line stream"></div>
+            <span>Natural Stream Order</span>
+          </div>
+          <div class="legend-scale">
+            <h4>Land Slope Classes</h4>
+            <div class="slope-scale-bar"></div>
+            <div class="scale-labels">
+              <span>0-1%</span>
+              <span>5-10%</span>
+              <span>35-50%</span>
+            </div>
+          </div>
+          <div class="legend-item">
+            <div class="color-box severe"></div>
+            <span>Lake Quality: Severe</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-box high"></div>
+            <span>Lake Quality: High</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-box moderate"></div>
+            <span>Lake Quality: Moderate</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-box low"></div>
+            <span>Lake Quality: Low</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot red"></div>
+            <span>Groundwater: High Concern</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot amber"></div>
+            <span>Groundwater: Caution</span>
+          </div>
+          <div class="legend-item">
+            <div class="color-dot green"></div>
+            <span>Groundwater: Within Limits</span>
+          </div>
+          <p class="legend-note">Zoom in to inspect the exact locations of vulnerable infrastructure.</p>
         </section>
       </div>
       
       <footer>
-        <p>Data Source: BWSSB, BBMP</p>
+        <p>Data Source: BWSSB, BBMP, KSPCB, watershed and slope datasets</p>
         <p>Built for Datajam 2026</p>
       </footer>
     </aside>

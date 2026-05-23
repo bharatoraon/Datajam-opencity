@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bengaluru Water Resilience Story</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./story.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- Map Background -->
+    <div id="map" class="story-map"></div>
+
+    <!-- UI Overlay Controls -->
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+
+    <!-- Scrollytelling Features -->
+    <div id="story">
+      <!-- Chapter 1 -->
+      <section id="chapter-1" class="step active">
+        <div class="step-content">
+          <h2>Chapter 1: The Veins of the City</h2>
+          <p>Bengaluru relies on a massive, sprawling network of water supply pipelines to sustain its millions of residents.</p>
+          <p>These blue lines represent over 48,000 kilometers of the Cauvery water supply network mapped across the entire metropolitan area.</p>
+        </div>
+      </section>
+
+      <!-- Chapter 2 -->
+      <section id="chapter-2" class="step">
+        <div class="step-content">
+          <h2>Chapter 2: The Hidden Danger</h2>
+          <p>However, running parallel—and sometimes intersecting—are the city's sewage lines and storm water drains.</p>
+          <p>Spatial analysis reveals over <strong>25,000 specific segments</strong> where the water supply network is located within 2 meters of a sewage line or manhole.</p>
+          <p>In the event of a pipe burst or heavy flooding, these glowing cyan zones carry an extremely high risk of cross-contamination.</p>
+        </div>
+      </section>
+
+      <!-- Chapter 3 -->
+      <section id="chapter-3" class="step">
+        <div class="step-content">
+          <h2>Chapter 3: Ecological Spillover</h2>
+          <p>When the system overflows, it doesn't just affect the pipes. The contamination spills into the city's natural ecology.</p>
+          <p>Notice how the primary drains (dark blue) and secondary drains (light blue) connect directly to the remaining lakes (blue polygons) and historical lost lakes (grey polygons).</p>
+        </div>
+      </section>
+
+      <!-- Chapter 4 -->
+      <section id="chapter-4" class="step">
+        <div class="step-content">
+          <h2>Chapter 4: The Socioeconomic Impact</h2>
+          <p>Who bears the brunt of this risk? By aggregating the risk points at the ward level, a stark divide emerges.</p>
+          <p>This choropleth map highlights wards in dark red that contain over 300 high-risk contamination zones. Furthermore, the overlaid pink polygons show Bengaluru's notified and non-notified slums, which frequently align with these high-risk watersheds.</p>
+        </div>
+      </section>
+
+      <!-- Chapter 5 -->
+      <section id="chapter-5" class="step">
+        <div class="step-content">
+          <h2>Chapter 5: Citizen Audits</h2>
+          <p>Citizens are tracking this crisis on the ground.</p>
+          <p>These pink markers represent localized citizen audits reporting on water contamination, foul odors, and solid waste blockages. Click on any of them to view the actual photographs submitted by volunteers.</p>
+          <p>Only through data transparency and civic action can we build a resilient Bengaluru.</p>
+        </div>
+      </section>
+      
+      <!-- Spacing to allow scrolling past the last chapter -->
+      <div class="spacer"></div>
+    </div>
+
+    <script type="module" src="./story.js"></script>
+  </body>
+</html>

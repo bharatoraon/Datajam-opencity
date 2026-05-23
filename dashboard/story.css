@@ -1,0 +1,103 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  overflow-x: hidden;
+}
+
+#map.story-map {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+}
+
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent-cyan);
+}
+
+#story {
+  position: relative;
+  z-index: 10;
+  width: 400px;
+  max-width: 90vw;
+  padding: 50vh 0; /* padding top/bottom so first/last slides sit in middle */
+  margin-left: 5vw;
+  pointer-events: none; /* Let map clicks go through where there's no text */
+}
+
+.step {
+  padding-bottom: 80vh;
+  opacity: 0.2;
+  transition: opacity 0.5s ease;
+}
+
+.step.active {
+  opacity: 1;
+}
+
+.step-content {
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  pointer-events: auto; /* Re-enable pointer events on the text box itself */
+}
+
+.step-content h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--accent-cyan);
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.step-content p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.step-content strong {
+  color: var(--text-main);
+}
+
+.spacer {
+  height: 50vh;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  #story {
+    width: 90vw;
+    margin: 0 auto;
+  }
+}
